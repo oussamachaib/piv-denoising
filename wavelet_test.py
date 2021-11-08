@@ -9,10 +9,13 @@ Created on Fri Nov  5 14:10:13 2021
 from pylab import*
 import cv2 as cv2
 import pywt
+from skimage import color
+from skimage import io
 
 close('all')
 
-original = imread('images/piv1.png','grayscale')
+original = imread('images/piv-synth1.png')
+original = color.rgb2gray(color.rgba2rgb(original))
 
 #imshow(original,'gray')
 

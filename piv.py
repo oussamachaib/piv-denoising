@@ -40,7 +40,7 @@ title('img2')
 ax1.set_xlabel('x [px]')
 ax1.set_ylabel('y [px]')
 '''
-px=255 # interrogation window size
+px=40 # interrogation window size
 span=arange(0,int(len(img1)),step=px)
 vx=1337*ones((len(span),len(span)))
 vy=1337*ones((len(span),len(span)))
@@ -71,8 +71,8 @@ for b in span:
         ax=axes()
         '''
         
-        x=linspace(0,len(corr),num=len(corr))
-        y=linspace(0,len(corr),num=len(corr))
+        x=linspace(1,len(corr)+1)#,num=len(corr))
+        y=linspace(1,len(corr)+1)#,num=len(corr))
         
         X,Y = meshgrid(x,y)
         #ax = plt.axes(projection='3d')
@@ -82,14 +82,14 @@ for b in span:
         #ax.set_ylabel('y [px]')
         #ax.set_zlabel('corr')
         #print(where(corr==corr.max()))
-        dy=(where(corr==corr.max())[0][0]-round(median(y)))/2
-        dx=(where(corr==corr.max())[1][0]-round(median(x)))/2
+        dy=where(corr==corr.max())[1][0]-round(mean(y))
+        dx=where(corr==corr.max())[0][0]-round(mean(x))
         #print(f'Displacement: {dy:.2} - {dx:.2}')
-        vy[cntb,cnta]=dy
-        vx[cntb,cnta]=dx
+        vy[cntb,cnta]=dx
+        vx[cntb,cnta]=dy
         cnta=cnta+1
-    vx=vx/vx.max()
-    vy=vy/vx.max()
+vx=vx/vx.max()
+vy=vy/vx.max()
 
 figure()
-quiver(vy,vx)
+quiver(vx[1:-1,1:-1],vy[1:-1,1:-1])

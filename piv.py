@@ -20,76 +20,87 @@ import matplotlib.cbook
 warnings.filterwarnings("ignore",category=matplotlib.cbook.mplDeprecation)
 
 close('all')
-start=time.time()
 
-img1_title='piv-synth1'
-img2_title='piv-synth2'
 
-img1 = color.rgb2gray(color.rgba2rgb(imread('images/'+img1_title+'.png')))
-img2 = color.rgb2gray(color.rgba2rgb(imread('images/'+img2_title+'.png')))
+img1_title='stag1'
+img2_title='stag2'
+
+ext='.tiff' #'.png'
+
 '''
-figure(1)
-ax0=subplot(121)
-title('img1')
-ax0.set_xlabel('x [px]')
-ax0.set_ylabel('y [px]')
-ax0.imshow(img1,'gray')
-ax1=subplot(122)
-ax1.imshow(img2,'gray')
-title('img2')
-ax1.set_xlabel('x [px]')
-ax1.set_ylabel('y [px]')
-'''
-px=40 # interrogation window size
-span=arange(0,int(len(img1)),step=px)
-vx=1337*ones((len(span),len(span)))
-vy=1337*ones((len(span),len(span)))
-cntb=-1
-for b in span:
-    cntb=cntb+1
-    cnta=0
-    for a in span:
-        corr=scipy.signal.correlate(img1[b:b+px,a:a+px],img2[b:b+px,a:a+px],method='fft')
-        #end=time.time()
-        #tm=end-start
-        #print(f'Time elapsed: {tm:.2} seconds')
-        '''
-        figure(2)
-        subplot(121)
-        title(f'img1[{b}:{a},{b}:{a}]')
-        xlabel('x [px]')
-        ylabel('y [px]')
-        imshow(img1[b:a,b:a],'gray')
-        subplot(122)
-        imshow(img2[b:a,b:a],'gray')
-        title(f'img2[{b}:{a},{b}:{a}]')
-        xlabel('x [px]')
-        ylabel('y [px]')
-        '''
-        '''
-        figure(3)
-        ax=axes()
-        '''
-        
-        x=linspace(1,len(corr)+1)#,num=len(corr))
-        y=linspace(1,len(corr)+1)#,num=len(corr))
-        
-        X,Y = meshgrid(x,y)
-        #ax = plt.axes(projection='3d')
-        #ax.plot_surface(X,Y,corr,cmap='hot')
-        #ax.set_title(f'corr(img1[{b}:{a},{b}:{a}],img2[{b}:{a},{b}:{a}])')
-        #ax.set_xlabel('x [px]')
-        #ax.set_ylabel('y [px]')
-        #ax.set_zlabel('corr')
-        #print(where(corr==corr.max()))
-        dy=where(corr==corr.max())[1][0]-round(mean(y))
-        dx=where(corr==corr.max())[0][0]-round(mean(x))
-        #print(f'Displacement: {dy:.2} - {dx:.2}')
-        vy[cntb,cnta]=dx
-        vx[cntb,cnta]=dy
-        cnta=cnta+1
-vx=vx/vx.max()
-vy=vy/vx.max()
+img1 = imread('images/'+img1_title+'.png')
+img2 = imread('images/'+img2_title+'.png')
 
+'''
+img1 = color.rgb2gray(color.rgba2rgb(imread('images/tiff/'+img1_title+ext)))
+img2 = color.rgb2gray(color.rgba2rgb(imread('images/tiff/'+img2_title+ext)))
+
+'''
+# thresholding
+img11=255*img1[:,:]/img1[:,:].max() 
+img22=255*img2[:,:]/img2[:,:].max() 
+# Conversion en 8-bit
+img11=img11.astype(np.uint8)
+img22=img22.astype(np.uint8)
+
+img1 = cv2.GaussianBlur(img11,(1,1),0)
+img2 = cv2.GaussianBlur(img22,(1,1),0)
+'''
+'''
+_, img1= cv2.threshold(img11,0,255,cv2.THRESH_OTSU)
+_, img2= cv2.threshold(img22,0,255,cv2.THRESH_OTSU)
+'''
+
+px=32 # interrogation window size
+dt = 1
+vx=99*ones((int(floor(len(img1)/px)),int(floor(len(img1)/px))))
+vy=99*ones((int(floor(len(img1)/px)),int(floor(len(img1)/px))))
+
+ca=-1
+for a in arange(0,len(img1),step=px):
+    ca=ca+1
+    cb=0
+    for b in arange(0,len(img1),step=px):
+        corr=scipy.signal.correlate(img1[a:a+px-1,b:b+px-1],img2[a:a+px-1,b:b+px-1],method='fft')    
+        vert=where(corr==corr.max())[0][0]-floor(len(corr)/2)
+        hor=where(corr==corr.max())[1][0]-floor(len(corr)/2)
+        vx[ca,cb] = -hor/dt
+        vy[ca,cb] = -vert/dt
+        cb=cb+1
+
+xv=arange(px/2,len(img1),step=px)
+yv=arange(px/2,len(img1),step=px)
+
+x=linspace(0,len(img1)+1,int(px/2))
+y=linspace(0,len(img1)+1,int(px/2))
+
+U=sqrt(pow(vx,2)+pow(vy,2))
+U=U/U.max()
 figure()
-quiver(vx[1:-1,1:-1],vy[1:-1,1:-1])
+#streamplot(x,y,-vx,-vy,color='black',arrowsize=.5,linewidth=1)
+contourf(x,y,U,cmap='coolwarm')
+colorbar(label='Normalized velocity Û [-]')
+quiver(xv,yv,vx,vy,color='black')
+title('velocity field ('+img1_title+', '+img2_title+')')
+xlabel('x [px]')
+ylabel('y [px]')
+#plt.gca().invert_xaxis()
+xlim(0,512)
+ylim(0,512)
+'''
+vfield = plt.gca()
+vfield.axes.xaxis.set_visible(False)
+vfield.axes.yaxis.set_visible(False)
+'''
+#savefig('figures/vfield-'+img1_title+'-'+img2_title+'.png',dpi=600)
+# still have to figure out how to correct direction
+# of streamlines for unidirectional flows...
+# probably has to do with matrix vs. image format
+# and display
+
+
+
+
+
+
+

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Nov  8 21:36:13 2021
+Created on Fri Nov 12 10:27:54 2021
 
 @author: oussamachaib
 """
@@ -9,6 +9,7 @@ Created on Mon Nov  8 21:36:13 2021
 from pylab import*
 import random
 import scipy.signal
+from scipy.stats import truncnorm
 import cv2 as cv2
 import pywt
 from skimage import color
@@ -19,38 +20,50 @@ import time
 import warnings
 import matplotlib.cbook
 warnings.filterwarnings("ignore",category=matplotlib.cbook.mplDeprecation)
+import scripts as sc
+
+
 
 close('all')
 
 
-img1_title='stag1'
-img2_title='stag2'
 
-ext='.tiff' #'.png'
+img1_title='rankine1'
+img2_title='rankine2'
 
-'''
-img1 = imread('images/'+img1_title+'.png')
-img2 = imread('images/'+img2_title+'.png')
-
-'''
+ext='.tiff'
+    
 img1 = color.rgb2gray(color.rgba2rgb(imread('images/tiff/'+img1_title+ext)))
 img2 = color.rgb2gray(color.rgba2rgb(imread('images/tiff/'+img2_title+ext)))
 
-'''
-# thresholding
-img11=255*img1[:,:]/img1[:,:].max() 
-img22=255*img2[:,:]/img2[:,:].max() 
-# Conversion en 8-bit
-img11=img11.astype(np.uint8)
-img22=img22.astype(np.uint8)
+np.random.seed(99)
 
-img1 = cv2.GaussianBlur(img11,(1,1),0)
-img2 = cv2.GaussianBlur(img22,(1,1),0)
+gaussian_noise=sc.ndist(mean=0,std=.08,low=0,up=1)
+noise = gaussian_noise.rvs(size(img1))
+noise_reshaped = reshape(noise,(len(img1),len(img1)))
+img1n=img1+noise_reshaped
+img2n=img2+noise_reshaped
+
+figure()
+subplot(121)
+imshow(img1[400:500,0:100],'gray')
+title('img1')
+subplot(122)
+imshow(img1n[400:500,0:100],'gray')
+title('img1 + noise')
 '''
+subplot(223)
+imshow(img2,'gray')
+title('img2')
+subplot(224)
+imshow(img2n,'gray')
+title('img2 + noise')
+#colorbar()
 '''
-_, img1= cv2.threshold(img11,0,255,cv2.THRESH_OTSU)
-_, img2= cv2.threshold(img22,0,255,cv2.THRESH_OTSU)
-'''
+tight_layout()
+
+img1=img1n
+img2=img2n
 
 px=32 # interrogation window size
 dt = 1
@@ -76,6 +89,7 @@ x=linspace(0,len(img1)+1,int(px/2))
 y=linspace(0,len(img1)+1,int(px/2))
 
 U=sqrt(pow(vx,2)+pow(vy,2))
+print(r'U_max = '+str(U.max()))
 U=U/U.max()
 figure()
 #streamplot(x,y,-vx,-vy,color='black',arrowsize=.5,linewidth=1)
@@ -98,6 +112,15 @@ vfield.axes.yaxis.set_visible(False)
 # of streamlines for unidirectional flows...
 # probably has to do with matrix vs. image format
 # and display
+
+
+
+
+
+
+
+
+
 
 
 

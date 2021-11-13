@@ -38,7 +38,7 @@ img2 = color.rgb2gray(color.rgba2rgb(imread('images/tiff/'+img2_title+ext)))
 
 np.random.seed(99)
 
-gaussian_noise=sc.ndist(mean=0,std=.08,low=0,up=1)
+gaussian_noise=sc.ndist(mean=0,std=.1,low=0,up=1)
 noise = gaussian_noise.rvs(size(img1))
 noise_reshaped = reshape(noise,(len(img1),len(img1)))
 img1n=img1+noise_reshaped

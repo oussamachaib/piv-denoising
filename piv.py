@@ -23,8 +23,8 @@ warnings.filterwarnings("ignore",category=matplotlib.cbook.mplDeprecation)
 close('all')
 
 
-img1_title='stag1'
-img2_title='stag2'
+img1_title='rankine1'
+img2_title='rankine2'
 
 ext='.tiff' #'.png'
 

@@ -1,0 +1,26 @@
+close('all');
+clear;
+
+%% loading image
+
+img_id = "parab1";
+ext = ".tiff";
+img = imread("images/tiff/"+img_id+ext);
+img = rgb2gray(img(:,:,1:3));
+
+figure();
+imshow(img);
+xlabel('x [px]')
+ylabel('x [px]')
+
+%% adding noise
+
+mean = mean(mean(img))
+s
+imgn = imnoise(img, 'gaussian', mean, var)
+
+
+
+
+
+

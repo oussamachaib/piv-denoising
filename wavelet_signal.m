@@ -1,7 +1,7 @@
 close('all');
 clear;
 
-x  = linspace(0,20,100);
+x  = linspace(0,10,100);
 y = sin(x);
 mean = .2;
 std = 1;
@@ -69,7 +69,7 @@ title("cd2");
 ylim([-2.5,2.5]);
 xlim([x(1),x(length(x))]);
 
-yd=wdenoise(yn,5,'Wavelet','bior3.3');
+yd=wdenoise(yn,6,'Wavelet','db10');
 figure();
 subplot(131);
 plot(x,y);

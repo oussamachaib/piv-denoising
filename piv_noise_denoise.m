@@ -21,46 +21,86 @@ end
 % img1=img1(1:500,1:500);
 % img1=img1(1:500,1:500);
 
+
 l = length(img1);
 
 %% add noise + denoise
 
-wfilter='sym2';
-level = 1;
-dm = 'UniversalThreshold' % 'Bayes' by def
+wfilter='bior1.1';
+level = 2;
+dm = 'Bayes'; % 'Bayes' by def
 
 
-mean = 0; % noise mean
-var = 0.03; % noise variance
-img1n = imnoise(img1, 'gaussian',mean,var);
-img2n = imnoise(img2, 'gaussian',mean,var);
+mu = 0; % noise mu
+var = 2 ; % noise variance
+rng(1)
+
+img1n = imnoise(img1, 'gaussian',mu,var/255);
+img2n = imnoise(img2, 'gaussian',mu,var/255);
+
+
+% just don't...
+% % test binarizing 
+% img1den = imbinarize(img1n);
+% img2den = imbinarize(img2n);
+% 
+% img1den = uint8(img1den*255);
+% img2den = uint8(img1den*255);
+
 img1den = wdenoise2(img1n,level,'Wavelet',wfilter,'DenoisingMethod',dm);
-img1den = uint8(img1den);
-img2den = wdenoise2(img2n,level,'Wavelet',wfilter);
+img1den = uint8(img1den); 
+img2den = wdenoise2(img2n,level,'Wavelet',wfilter); 
 img2den = uint8(img2den);
+
+% net = denoisingNetwork('DnCNN');
+% img1den1 = denoiseImage(img1n,net);
+% img2den1 = denoiseImage(img2n,net);
+
+% figure();
+% subplot(131)
+% imshow(img1(:,:));
+% title('img1(1:50,1:50)')
+% xlabel('x [px]')
+% ylabel('y [px]')
+% subplot(132)
+% imshow(img1den(:,:));
+% title('DWT')
+% xlabel('x [px]')
+% ylabel('y [px]')
+% subplot(133);
+% imshow(img1den1(:,:));
+% xlabel('x [px]');
+% ylabel('y [px]');
+% title("NN");
 
 fig0=figure();
 subplot(131)
-imshow(img1(:,:));
-title('img1(1:50,1:50)')
+imshow(img1(1:100,1:100));
+title('img1(1:100,1:100)')
 xlabel('x [px]')
 ylabel('y [px]')
 
 
 subplot(132)
-imshow(img1n(:,:));
-title('img1n(1:50,1:50)')
+imshow(img1n(1:100,1:100));
+title('img1n(1:100,1:100)')
 xlabel('x [px]')
 ylabel('y [px]')
 
 subplot(133);
-imshow(img1den(:,:));
+imshow(img1den(1:100,1:100));
 xlabel('x [px]');
 ylabel('y [px]');
-title("imgn(1:50,1:50) denoised");
+title("img1n(1:100,1:100) denoised");
 
 
 fig0.Position = [2000 2000 1500 500];%800 400];
+
+% imwrite(img1n,'images/noise/'+img_id+'1n.tiff','tiff')
+% imwrite(img2n,'images/noise/'+img_id+'2n.tiff','tiff')
+% 
+% imwrite(img1den,'images/noise/'+img_id+'1den.tiff','tiff')
+% imwrite(img2den,'images/noise/'+img_id+'2den.tiff','tiff')
 
 %% cross-correlation without noise
 
@@ -85,6 +125,9 @@ for a=1:window:l
     end
 end
 
+u = vx;
+v = vy;
+
 x=linspace(0,512,length(vx));
 y=linspace(0,512,length(vx));
 
@@ -99,7 +142,7 @@ fig=figure();
 fig.Position = [150 250 1500 500];
 
 subplot(131)
-[C,h] = contour(x,y,Uhat,100);
+[C,h] = contourf(x,y,Uhat,100);
 hold on;
 title('Velocity field - '+img_id);
 set(h,'LineColor','none')
@@ -135,11 +178,14 @@ for a=1:window:l
     end
 end
 
-U = sqrt(vx.^2+vy.^2);
-Uhat = U;%./max(U);
+un = vx;
+vn = vy;
+
+Un = sqrt(vx.^2+vy.^2);
+Uhat = Un;%./max(Un);
 
 subplot(132)
-[C,h] = contour(x,y,Uhat,100);
+[C,h] = contourf(x,y,Uhat,100);
 hold on;
 title('Velocity field - '+img_id+' + noise');
 set(h,'LineColor','none')
@@ -174,11 +220,14 @@ for a=1:window:l
     end
 end
 
-U = sqrt(vx.^2+vy.^2);
-Uhat = U;%./max(U);
+uden = vx;
+vden = vy;
+
+Uden = sqrt(vx.^2+vy.^2);
+Uhat = Uden;%./max(Uden);
 
 subplot(133)
-[C,h] = contour(x,y,Uhat,100);
+[C,h] = contourf(x,y,Uhat,100);
 hold on;
 title('Velocity field - '+img_id+' denoised');
 set(h,'LineColor','none')
@@ -192,3 +241,27 @@ set(gca, 'YDir','reverse')
 xlabel('x [px]')
 ylabel('y [px]')
 hold off;
+
+%% estimating error
+
+Urms_n = sqrt(mean(mean((Un-U).^2)))
+Urms_den = sqrt(mean(mean((Uden-U).^2)))
+
+
+imgrms_n = sqrt(mean(mean((img1-img1n).^2)))
+imgrms_den = sqrt(mean(mean((img1-img1den).^2)))
+
+
+urms_n=sqrt(mean(mean((u-un).^2)))
+urms_den=sqrt(mean(mean((u-uden).^2)))
+
+vrms_n=sqrt(mean(mean((v-vn).^2)))
+vrms_den=sqrt(mean(mean((v-vden).^2)))
+
+
+
+
+
+
+
+
